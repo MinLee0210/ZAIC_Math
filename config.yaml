@@ -1,0 +1,45 @@
+dataset: 
+  train: ./dataset/train/math_train.json
+  test: ./dataset/train/math_test.json
+
+model: 
+  VER: 2
+  NUM_TRAIN_SAMPLES: 1024               # TRAIN WITH SUBSET OF 60K
+  USE_PEFT: False                       # PARAMETER EFFICIENT FINE TUNING: PEFT REQUIRES 1XP100 GPU NOT 2XT4
+  FREEZE_LAYERS: 18                     # NUMBER OF LAYERS TO FREEZE: DEBERTA LARGE HAS TOTAL OF 24 LAYERS
+  FREEZE_EMBEDDINGS: True               # BOOLEAN TO FREEZE EMBEDDINGS
+  MAX_INPUT: 256                        # LENGTH OF CONTEXT PLUS QUESTION ANSWER
+  ID: 'microsoft/deberta-v3-large'      # HUGGING FACE MODEL
+  LORA:
+    r: 8
+    lora_alpha: 4
+    task_type: SEQ_CLS
+    lora_dropout: 0.1
+    bias: "none"
+    inference_mode: False
+    target_modules: ["query_proj", "value_proj"]
+    modules_to_save: ['classifier','pooler']
+
+ckpt: ./ckpt
+
+train: 
+  warmup_ratio: 0.1
+  learning_rate: 2e-5
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 2
+  num_train_epochs: 2
+  report_to: 'none'
+  output_dir :  ./ckpt/model_v6_1               
+  overwrite_output_dir: True
+  fp16: True
+  gradient_accumulation_steps: 8
+  logging_steps: 25
+  evaluation_strategy: 'steps'
+  eval_steps: 25
+  save_strategy: "steps"
+  save_steps: 25
+  load_best_model_at_end: False
+  metric_for_best_model: 'map@3'
+  lr_scheduler_type: 'cosine'
+  weight_decay: 0.01
+  save_total_limit: 2
